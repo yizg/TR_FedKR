@@ -218,7 +218,8 @@ class Simulation:
                               'weighted_kmeans',
                               'kmedian',
                               'trimmed_kmeans',
-                              'mean_shift']
+                              'mean_shift'],
+                 verbose=False
                  ):
         self.X = X
         self.y = y
@@ -238,6 +239,8 @@ class Simulation:
         self.clients_weights = []
         self.server_centers = defaultdict(list)
         self.centralized_centers = []
+
+        self.verbose = verbose
 
     def partition_data(self):
         if self.partition == 'random':
@@ -284,21 +287,25 @@ class Simulation:
 
                 # 3. Clients send their centers through a noisy channel
                 if self.redundancy > 1:
+                    # Use redundancy estimator for redundancy > 1
                     centers, var_noise = redundance_estimator(
                         centers, r=self.redundancy, snr_db=self.snr_db)
                     var_noise_eff = centers.shape[1] * \
-                        var_noise/self.redundancy
-                    weights = counts/(1 + variances/var_noise_eff)
-                    # counts#/(variances + var_noise_eff)
-                    weights = np.ones((counts.shape[0],))
-                    clients_weights.append(weights)
+                        var_noise / self.redundancy
+                    # Calculate weights based on counts and noise variance
+                    weights = counts / (1 + variances / var_noise_eff)
                 else:
+                    # For redundancy = 1, use simple noisy communication
                     centers = self.noisy_communication(centers)
+                    # For redundancy = 1, we still need weights for weighted_kmeans
+                    # Use counts as weights (more points in cluster = more weight)
+                    weights = counts.copy()
+
                 clients_centers.append(centers)
+                clients_weights.append(weights)
 
             clients_centers = np.vstack(clients_centers)
-            if clients_weights:
-                clients_weights = np.hstack(clients_weights)
+            clients_weights = np.hstack(clients_weights)
             self.clients_centers.append(clients_centers)
             self.clients_weights.append(clients_weights)
 
@@ -317,7 +324,8 @@ class Simulation:
             full_summary[run]['Centralized K-Means'] = centralized_summary
             self.centralized_centers.append(centralized_centers)
 
-            print(f"Run: {run+1}/{self.n_runs} {run_summary}")
+            if self.verbose:
+                print(f"Run: {run+1}/{self.n_runs} {run_summary}")
 
         combined = pd.concat({k: pd.DataFrame(v)
                              for k, v in full_summary.items()}, axis=1).stack()
