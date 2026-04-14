@@ -1,7 +1,7 @@
-from read_data import read_s_dataset
+from utils.read_data import read_s_dataset
 import numpy as np
 import pandas as pd
-from clustering import Simulation
+from simulation import Simulation
 
 X, y = read_s_dataset(2)
 N_CLIENT = 10

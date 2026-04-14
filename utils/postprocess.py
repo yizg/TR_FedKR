@@ -1,27 +1,9 @@
-import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import metrics
-
-
-def compute_dist(X, centers):
-    """Compute the squared distance between each point and each center."""
-    diff = X[:, np.newaxis, :] - centers[np.newaxis, :, :]
-    sq_dist = np.sum(diff ** 2, axis=2)
-    return sq_dist
-
-
-def within_cluster_ss(X, centers):
-    """Compute the within-cluster sum of squares for a given set of centers."""
-    sq_dist = compute_dist(X, centers)
-    return np.sum(np.min(sq_dist, axis=1))
-
-
-def assign_cluster(X, centers):
-    """Assign each point to the closest center."""
-    sq_dist = compute_dist(X, centers)
-    labels = np.argmin(sq_dist, axis=1)
-    return labels
+from utils.math_utils import assign_cluster, within_cluster_ss
+import numpy as np
+import pandas as pd
+import plotly.express as px
 
 
 def plot_assign_cluster_2d(data, centers):
@@ -39,6 +21,19 @@ def plot_clusters_2d(data, labels, centers=None):
         plt.scatter(centers[:, 0], centers[:, 1], c='red',
                     marker='x', s=200, label='Centroid')
     plt.legend()
+
+
+def visualize_centers(clients_centers, server_centers, centralized_centers, weights=None):
+    d = {'Client Centers': pd.DataFrame(clients_centers),
+         'Server Centers': pd.DataFrame(server_centers),
+         'Centralized': pd.DataFrame(centralized_centers)}
+    df = pd.concat(d, axis=0).reset_index()
+    if weights is not None:
+        df['weights'] = pd.DataFrame(weights)
+        df = df.fillna(df['weights'].mean()/2)
+    fig = px.scatter(df, x=0, y=1, color='level_0', title='Server Agg Centers vs Centralized Centers', labels={
+                     'level_0': 'Type'}, size='weights'if weights is not None else None)
+    return fig
 
 
 def evaluation_summary(X, centers, true_labels=None):

@@ -1,0 +1,24 @@
+# Global defaults
+
+defaults:
+  n_runs: 10
+
+# List of experiment configurations to run
+experiments:
+  - name: "kmeans_comparison"
+    n_client: 10
+    k_client: 15
+    k_server: 15
+    n_runs: 10
+    param_r: 2
+    snr_db: 10
+    aggregation_methods: ["kmeans", "weighted_kmeans"]
+
+  - name: "high_snr_test"
+    n_client: 20
+    k_client: 30
+    k_server: 30
+    n_runs: 5
+    param_r: 3
+    snr_db: 20
+    aggregation_methods: ["weighted_kmeans"]
