@@ -1,18 +1,22 @@
-# Global defaults
+output_prefix: exp
 
 defaults:
   n_runs: 10
+  base_seed: 42
+  partition: random
+  noise: gaussian
+  flip_prob: 0.01
+  verbose: false
 
-# List of experiment configurations to run
 experiments:
   - name: "kmeans_comparison"
     n_client: 10
     k_client: 15
     k_server: 15
-    n_runs: 10
+    n_runs: 5
     param_r: 2
     snr_db: 10
-    aggregation_methods: ["kmeans", "weighted_kmeans"]
+    aggregation_methods: "kmeans"
 
   - name: "high_snr_test"
     n_client: 20
@@ -21,4 +25,4 @@ experiments:
     n_runs: 5
     param_r: 3
     snr_db: 20
-    aggregation_methods: ["weighted_kmeans"]
+    aggregation_methods: "weighted_kmeans"
