@@ -69,3 +69,18 @@ def evaluation_summary(X, centers, true_labels=None):
     # calinski_harabasz = metrics.calinski_harabasz_score(X, labels)
     # output['C-H Ratio'] = calinski_harabasz
     return output
+
+
+def plot_summary_bars(df):
+    # self.stats['mean']['WCSS'].plot.bar(yerr=self.stats['std']['WCSS'])
+    df = df.drop('WCSS', axis=1, level=0).melt(
+        ignore_index=False).reset_index()
+    df = df.pivot(columns=['variable_1', "experiment",],
+                  index=["variable_0",], values='value')
+    df = df.rename_axis(None).rename_axis([None, None], axis=1)
+    df.plot(kind='bar', y='mean', yerr='std', capsize=3)
+    plt.ylabel('Score')
+    plt.title('Clustering Performance Comparison')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()

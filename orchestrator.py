@@ -5,10 +5,11 @@ from pathlib import Path
 from simulation import Simulation
 import pickle
 from datetime import datetime
+from utils.postprocess import plot_summary_bars
 
 
 class ExperimentOrchestrator:
-    def __init__(self, config_path: str, X: np.ndarray, y: np.ndarray):
+    def __init__(self, config_path: str, X: np.ndarray, y: np.ndarray, plot_summary=False):
         with open(config_path) as f:
             raw = yaml.safe_load(f)
         self.defaults = raw.get("defaults", {})
@@ -19,6 +20,7 @@ class ExperimentOrchestrator:
         self.results_dir.mkdir(exist_ok=True)
         self.output_prefix = raw.get("output_prefix", "result")
         self.configs = []
+        self.plot_summary = plot_summary
 
     def _merge_config(self, exp: dict) -> dict:
         cfg = self.defaults.copy()
@@ -57,6 +59,8 @@ class ExperimentOrchestrator:
 
         df = pd.DataFrame(all_results)
         summary = self._save_and_summarize(df)
+        if self.plot_summary:
+            plot_summary_bars(summary)
         return summary
 
     def _save_and_summarize(self, df: pd.DataFrame):
@@ -67,7 +71,7 @@ class ExperimentOrchestrator:
         # Compute mean/std per experiment
         num_cols = df.select_dtypes(include=np.number).columns
         summary = df.groupby("experiment")[num_cols].agg(
-            ["mean", "std"]).reset_index().drop(["run_idx", "seed"], axis=1, level=0)
+            ["mean", "std"]).reset_index().drop(["run_idx", "seed"], axis=1, level=0).set_index('experiment')
         output['summary'] = summary
 
         with open(filename, 'wb') as f:
@@ -75,3 +79,4 @@ class ExperimentOrchestrator:
 
         print(summary.to_string(index=False))
         print(f"\n Summary saved to `{filename}`")
+        return summary
