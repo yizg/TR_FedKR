@@ -17,7 +17,7 @@ def add_awgn(vectors, snr_db=None, sigma=None):
         signal_power = np.mean(vectors ** 2)
         snr_linear = 10 ** (snr_db / 10.0)
         sigma = np.sqrt(signal_power / snr_linear)
-    noise = np.random.normal(0.0, sigma, vectors.shape)
+    noise = np.random.normal(0.0, sigma, vectors.shape).astype(np.float32)
     return vectors + noise
 
 
@@ -30,9 +30,10 @@ def redundance_estimator(X, r, snr_db):
     X_flat = X.flatten()
     X_a = np.hstack([X_flat] * r)
     X_a_noisy = add_awgn(X_a, snr_db=snr_db)
-    I = np.eye(X_flat.shape[0])
+    I = np.eye(X_flat.shape[0], dtype=np.float32)
     I_a = np.vstack([I] * r)
     X_est, sigma2_est = ols(I_a, X_a_noisy)
+
     return X_est.reshape(X.shape), sigma2_est
 
 
@@ -65,18 +66,18 @@ class Simulation:
             return random_data_partition(self.X, self.y, self.n_client)
 
     def _compute_weights(self, counts, var_noise=None, var_cluster=None):
-        if var_noise and var_cluster:
+        if var_noise is not None and var_cluster is not None:
             var_noise_eff = self.X.shape[1] * var_noise / self.redundancy
             weights = counts / (1 + var_cluster / var_noise_eff)
         else:
             weights = counts
-        return weights
+        return weights.astype(np.float32)
 
     def _uplink_communication(self, vectors):
         var_noise_hat = None
         if self.noise == "gaussian":
             if self.redundancy > 1:
-                vectors, var_noise = redundance_estimator(
+                vectors, var_noise_hat = redundance_estimator(
                     vectors, r=self.redundancy, snr_db=self.snr_db)
             else:
                 vectors = add_awgn(vectors, snr_db=self.snr_db)

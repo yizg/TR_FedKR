@@ -12,7 +12,7 @@ def kmeans(X, n_clusters, weights=None, return_extra=False):
         labels = kmeans.labels_
         centers = kmeans.cluster_centers_
         counts = np.bincount(labels)
-        variances = np.zeros(n_clusters)
+        variances = np.zeros(n_clusters, dtype=np.float32)
         for i in range(n_clusters):
             mask = (labels == i)
             cluster_points = X[mask]
