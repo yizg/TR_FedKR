@@ -63,11 +63,13 @@ def evaluation_summary(X, centers, true_labels=None):
         purity = np.sum(np.amax(confusion_matrix, axis=0)) / \
             np.sum(confusion_matrix)
         output['Purity'] = purity
-
-    silhouette = metrics.silhouette_score(X, labels, metric='euclidean')
-    output['Silhouette'] = silhouette
-    # calinski_harabasz = metrics.calinski_harabasz_score(X, labels)
-    # output['C-H Ratio'] = calinski_harabasz
+    try:
+        silhouette = metrics.silhouette_score(X, labels, metric='euclidean')
+        output['Silhouette'] = silhouette
+    except:
+        pass
+        # calinski_harabasz = metrics.calinski_harabasz_score(X, labels)
+        # output['C-H Ratio'] = calinski_harabasz
     return output
 
 

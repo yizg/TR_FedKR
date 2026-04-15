@@ -5,8 +5,9 @@ defaults:
   n_client: 50
   k_client: 26
   k_server: 26
-  param_r: 1
+  redundancy: 1
   snr_db: 10
+  eps : 0
   flip_prob: 0.01
   partition: random
   noise: gaussian
@@ -15,11 +16,11 @@ defaults:
 
 experiments:
   - name: Kmeans r=1
-    param_r: 1
+    redundancy: 1
     aggregation: kmeans
 
   - name: Kmeans r=4
-    param_r: 4
+    redundancy: 4
     aggregation: kmeans
 
   - name: Centralized

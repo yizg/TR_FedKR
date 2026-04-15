@@ -12,12 +12,20 @@ from algorithms.methods import kmeans, kmedian, trimmed_kmeans, mean_shift_filte
 # ──────────────────────────────────────────────────────────────
 
 
-def add_awgn(vectors, snr_db=None, sigma=None):
-    if snr_db is not None:
-        signal_power = np.mean(vectors ** 2)
-        snr_linear = 10 ** (snr_db / 10.0)
-        sigma = np.sqrt(signal_power / snr_linear)
-    noise = np.random.normal(0.0, sigma, vectors.shape).astype(np.float32)
+def add_awgn(vectors, snr_db, eps=0):
+    signal_power = np.mean(vectors ** 2)
+    snr_linear = 10 ** (snr_db / 10.0)
+    sigma1 = np.sqrt(signal_power / snr_linear)
+    if eps > 0:
+        sigma2 = 100*sigma1
+        impulse_mask = np.random.rand(*vectors.shape) < eps
+        noise = np.where(
+            impulse_mask,
+            np.random.normal(0, sigma2, vectors.shape),
+            np.random.normal(0, sigma1, vectors.shape)
+        ).astype(np.float32)
+    else:
+        noise = np.random.normal(0.0, sigma1, vectors.shape).astype(np.float32)
     return vectors + noise
 
 
@@ -26,14 +34,13 @@ def sign_flip(vectors, flip_prob=0.01):
     return np.where(mask, -vectors, vectors)
 
 
-def redundance_estimator(X, r, snr_db):
+def redundance_estimator(X, r, snr_db, eps):
     X_flat = X.flatten()
     X_a = np.hstack([X_flat] * r)
-    X_a_noisy = add_awgn(X_a, snr_db=snr_db)
+    X_a_noisy = add_awgn(X_a, snr_db, eps)
     I = np.eye(X_flat.shape[0], dtype=np.float32)
     I_a = np.vstack([I] * r)
     X_est, sigma2_est = ols(I_a, X_a_noisy)
-
     return X_est.reshape(X.shape), sigma2_est
 
 
@@ -48,8 +55,9 @@ class Simulation:
         self.n_client = config.get("n_client", 10)
         self.k_client = config.get("k_client", 10)
         self.k_server = config.get("k_server", 10)
-        self.redundancy = config.get("param_r", 1)
+        self.redundancy = config.get("redundancy", 1)
         self.snr_db = config.get("snr_db", 20)
+        self.eps = config.get("eps", 0)
         self.flip_prob = config.get("flip_prob", 0.01)
         self.partition = config.get("partition", "random")
         self.noise = config.get("noise", "gaussian")
@@ -78,10 +86,10 @@ class Simulation:
         if self.noise == "gaussian":
             if self.redundancy > 1:
                 vectors, var_noise_hat = redundance_estimator(
-                    vectors, r=self.redundancy, snr_db=self.snr_db)
+                    vectors, r=self.redundancy, snr_db=self.snr_db, eps=self.eps)
             else:
-                vectors = add_awgn(vectors, snr_db=self.snr_db)
-        if self.noise == "sign_flip":
+                vectors = add_awgn(vectors, self.snr_db, self.eps)
+        elif self.noise == "sign_flip":
             return sign_flip(vectors, flip_prob=self.flip_prob)
         return vectors, var_noise_hat
 
