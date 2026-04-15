@@ -46,21 +46,19 @@ class Simulation:
         self.y = y
         self.n_client = config.get("n_client", 10)
         self.k_client = config.get("k_client", 10)
-        self.k_server = config.get("k_clk_serverient", 10)
+        self.k_server = config.get("k_server", 10)
         self.redundancy = config.get("param_r", 1)
         self.snr_db = config.get("snr_db", 20)
         self.flip_prob = config.get("flip_prob", 0.01)
         self.partition = config.get("partition", "random")
         self.noise = config.get("noise", "gaussian")
-        self.aggregation = config.get("aggregation_methods", "kmeans")
+        self.aggregation = config.get("aggregation", "kmeans")
         self.verbose = config.get("verbose", False)
 
         self.clients_centers = None
         self.clients_weights = None
         self.server_centers = None
         self.results = None
-
-        self.X_part, self.y_part = self._partition_data()
 
     def _partition_data(self):
         if self.partition == "random":
@@ -102,24 +100,27 @@ class Simulation:
         raise ValueError(f"Unknown aggregation: {self.aggregation}")
 
     def run_trial(self, seed) -> dict:
-        """Run ONE trial. Returns {method_name: {metric: value, ...}, ...}"""
         np.random.seed(seed)  # Reproducible per trial
+        if self.n_client == 0:  # Centralized
+            self.clients_centers = self.X
+            self.clients_weights = None
+        else:
+            self.X_part, self.y_part = self._partition_data()
+            clients_centers, clients_weights = [], []
+            for client in range(self.n_client):
+                centers, counts, var_cluster = kmeans(
+                    self.X_part[client], n_clusters=self.k_client, return_extra=True
+                )
+                centers, var_noise_hat = self._uplink_communication(centers)
+                weights = self._compute_weights(
+                    counts, var_noise_hat, var_cluster)
+                clients_centers.append(centers)
+                clients_weights.append(weights)
 
-        clients_centers, clients_weights = [], []
-        for client in range(self.n_client):
-            centers, counts, var_cluster = kmeans(
-                self.X_part[client], n_clusters=self.k_client, return_extra=True
-            )
-            centers, var_noise_hat = self._uplink_communication(centers)
-            weights = self._compute_weights(counts, var_noise_hat, var_cluster)
-            clients_centers.append(centers)
-            clients_weights.append(weights)
-
-        self.clients_centers = np.vstack(clients_centers)
-        self.clients_weights = np.hstack(clients_weights)
+            self.clients_centers = np.vstack(clients_centers)
+            self.clients_weights = np.hstack(clients_weights)
 
         self.server_centers = self._server_aggregate()
-
         self.results = evaluation_summary(self.X, self.server_centers, self.y)
 
         if self.verbose:

@@ -1,28 +1,27 @@
-output_prefix: exp
+output_prefix: letter
 
 defaults:
-  n_runs: 10
-  base_seed: 42
+  n_runs: 5
+  n_client: 50
+  k_client: 26
+  k_server: 26
+  param_r: 1
+  snr_db: 10
+  flip_prob: 0.01
   partition: random
   noise: gaussian
-  flip_prob: 0.01
+  aggregation: kmeans
   verbose: false
 
 experiments:
-  - name: "kmeans_comparison"
-    n_client: 10
-    k_client: 15
-    k_server: 15
-    n_runs: 5
-    param_r: 2
-    snr_db: 10
-    aggregation_methods: "kmeans"
+  - name: Kmeans r=1
+    param_r: 1
+    aggregation: kmeans
 
-  - name: "high_snr_test"
-    n_client: 20
-    k_client: 30
-    k_server: 30
-    n_runs: 5
-    param_r: 3
-    snr_db: 20
-    aggregation_methods: "weighted_kmeans"
+  - name: Kmeans r=4
+    param_r: 4
+    aggregation: kmeans
+
+  - name: Centralized
+    n_client: 0
+
