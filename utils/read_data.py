@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from functools import partial
 
 
 def read_s_dataset(s):
@@ -16,3 +17,39 @@ def read_letter_dataset():
     y = pd.read_csv('data/letter/letter.pa', header=None, sep='   ',
                     skiprows=5, engine='python', dtype=np.int32)[0]
     return X.values, y.values
+
+
+def read_wine_dataset():
+    data = pd.read_csv(
+        'data/wine+quality/winequality-white.csv', sep=';',  dtype=np.float32)
+    X = data.drop('quality', axis=1)
+    y = data['quality'].astype(np.int32)
+    return X.values, y.values
+
+
+def read_yeast_dataset():
+    data = pd.read_csv('data/yeast/yeast.data', sep="\s+",
+                       header=None)
+    X = data.drop([0, 9], axis=1).astype(np.float32)
+    y = pd.factorize(data[9])[0].astype(np.int32)
+    return X.values, y
+
+
+dataset_loader_map = {
+    "S1": partial(read_s_dataset, 1),
+    "S2": partial(read_s_dataset, 2),
+    "S3": partial(read_s_dataset, 3),
+    "S4": partial(read_s_dataset, 4),
+    "letter": read_letter_dataset,
+    "wine": read_wine_dataset,
+    "yeast": read_yeast_dataset,
+}
+
+
+def read_dataset(name):
+    """Load and return (X, y) for the given dataset name."""
+    if name not in dataset_loader_map:
+        raise ValueError(
+            f"Unknown dataset: {name}. Available: {list(dataset_loader_map.keys())}")
+    loader = dataset_loader_map[name]
+    return loader()

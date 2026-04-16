@@ -53,7 +53,6 @@ def evaluation_summary(X, centers, true_labels=None):
     output['WCSS'] = wcss
     # nmse = wcss / (n * d)
     # output['nMSE'] = nmse
-
     if true_labels is not None:
         ari = metrics.adjusted_rand_score(true_labels, labels)
         output['ARI'] = ari
