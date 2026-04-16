@@ -11,14 +11,6 @@ def read_s_dataset(s):
     return X.values, y.values
 
 
-def read_letter_dataset():
-    X = pd.read_csv(f'data/letter/letter.txt',
-                    header=None, sep=' ', dtype=np.float32)
-    y = pd.read_csv('data/letter/letter.pa', header=None, sep='   ',
-                    skiprows=5, engine='python', dtype=np.int32)[0]
-    return X.values, y.values
-
-
 def read_wine_dataset():
     data = pd.read_csv(
         'data/wine+quality/winequality-white.csv', sep=';',  dtype=np.float32)
@@ -35,14 +27,39 @@ def read_yeast_dataset():
     return X.values, y
 
 
+def read_statlog_dataset():
+    data = pd.read_csv(
+        'data/statlog+landsat+satellite/sat.trn', sep=' ', header=None)
+    y = data[36].astype(np.int32)
+    X = data.drop(36, axis=1).astype(np.float32)
+    return X.values, y.values
+
+
+def read_letter_dataset():
+    X = pd.read_csv(f'data/letter/letter.txt',
+                    header=None, sep=' ', dtype=np.float32)
+    y = pd.read_csv('data/letter/letter.pa', header=None, sep='   ',
+                    skiprows=5, engine='python', dtype=np.int32)[0]
+    return X.values, y.values
+
+
+def read_mnist_dataset():
+    data = pd.read_csv('data/mnist_train.csv', header=None)
+    X = data.drop(0, axis=1).astype(np.float32)
+    y = data[0].astype(np.int32)
+    return X.values, y.values
+
+
 dataset_loader_map = {
     "S1": partial(read_s_dataset, 1),
     "S2": partial(read_s_dataset, 2),
     "S3": partial(read_s_dataset, 3),
     "S4": partial(read_s_dataset, 4),
+    "statlog": read_statlog_dataset,
     "letter": read_letter_dataset,
     "wine": read_wine_dataset,
     "yeast": read_yeast_dataset,
+    "mnist": read_mnist_dataset,
 }
 
 
