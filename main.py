@@ -19,7 +19,7 @@ if __name__ == "__main__":
         "r": 4,
         "snr_db": 20,
         "eps": 0,
-        "sheme": "dense",
+        "scheme": "dense",
         "solver": "ols",
         "alpha": 0.2
     }

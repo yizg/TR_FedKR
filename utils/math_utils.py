@@ -65,9 +65,16 @@ def dirichlet_data_partition(X, y, n_client, alpha=1, random_state=0):
     return X_splits, y_splits
 
 
-def random_semi_orthogonal(n, k):
-    Z = np.random.standard_normal((n, k))
+def random_semi_orthogonal(n, k, random_state=0):
+    # Initialize the generator with the seed
+    rng = np.random.default_rng(random_state)
+
+    # Use the generator instead of np.random
+    Z = rng.standard_normal((n, k))
+
     Q, R = np.linalg.qr(Z)
+
+    # Ensure a deterministic result by fixing the sign of the columns
     d = np.sign(np.diag(R))
     Q = Q * d
     return Q.astype(np.float32)
