@@ -1,28 +1,32 @@
-output_prefix: letter
+output_prefix: S1
 
 defaults:
   n_runs: 5
-  n_client: 50
-  k_client: 26
-  k_server: 26
-  redundancy: 1
+  n_client: 10
+  k_client: 15
+  k_server: 15
+  partition: random
+  aggregation: kmeans
+  verbose: False
+  r: 1
   snr_db: 10
   eps : 0
-  flip_prob: 0.01
-  partition: random
-  noise: gaussian
-  aggregation: kmeans
-  verbose: false
+  scheme : rep
+  solver : ols
+  alpha : 0.2
+
 
 experiments:
-  - name: Kmeans r=1
-    redundancy: 1
-    aggregation: kmeans
-
-  - name: Kmeans r=4
-    redundancy: 4
-    aggregation: kmeans
-
+  - name: Kmeans OLS
+    r: 4
+    eps : 0.1
+    scheme : rep
+    solver : ols
+  - name: Kmeans LTS
+    r: 4
+    eps : 0.1
+    scheme : dense
+    solver : lts
   - name: Centralized
     n_client: 0
 
