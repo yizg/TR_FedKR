@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from utils import *
-from utils.math_utils import ols, random_data_partition, random_semi_orthogonal, least_trimmed_square, theil_sen
+from utils.math_utils import ols, random_data_partition, dirichlet_data_partition, random_semi_orthogonal, least_trimmed_square, theil_sen
 from utils.postprocess import evaluation_summary
 from algorithms.methods import kmeans, kmedian, trimmed_kmeans, mean_shift_filtering
 
@@ -82,9 +82,11 @@ class Simulation:
         self.server_centers = None
         self.results = None
 
-    def _partition_data(self):
+    def _partition_data(self, seed):
         if self.partition == "random":
-            return random_data_partition(self.X, self.y, self.n_client)
+            return random_data_partition(self.X, self.y, self.n_client, seed)
+        elif self.partition == "dirichlet":
+            return dirichlet_data_partition(self.X, self.y, self.n_client, 1, seed)
 
     def _compute_weights(self, counts, var_noise, var_cluster):
         if var_noise is not np.nan:
@@ -120,7 +122,7 @@ class Simulation:
             self.clients_centers = self.X
             self.clients_weights = None
         else:
-            self.X_part, self.y_part = self._partition_data()
+            self.X_part, self.y_part = self._partition_data(seed)
             clients_centers, clients_weights = [], []
             for client in range(self.n_client):
                 centers, counts, var_cluster = kmeans(

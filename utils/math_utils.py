@@ -11,6 +11,60 @@ def random_data_partition(X, y, n_client, random_state=0):
     return np.array_split(X, n_client), np.array_split(y, n_client)
 
 
+def dirichlet_data_partition(X, y, n_client, alpha=1, random_state=0):
+    """
+    Partitions X and y into non-IID splits for clients using a Dirichlet distribution.
+
+    Args:
+        X (np.ndarray): Feature dataset.
+        y (np.ndarray): Target labels.
+        n_client (int): Number of clients in the federated learning setup.
+        alpha (float): Dirichlet distribution parameter. Smaller = higher skew.
+        random_state (int): Seed for reproducibility.
+
+    Returns:
+        tuple: (X_splits, y_splits) where each is a list of arrays assigned to each client.
+    """
+    rng = np.random.default_rng(random_state)
+    y = np.array(y)
+    classes = np.unique(y)
+
+    # Initialize an empty list of indices for each client
+    client_indices = [[] for _ in range(n_client)]
+
+    for c in classes:
+        # 1. Get all indices in the dataset belonging to class c
+        idx_c = np.where(y == c)[0]
+        rng.shuffle(idx_c)
+
+        # 2. Sample proportions for this class across all clients from a Dirichlet distribution
+        proportions = rng.dirichlet(np.repeat(alpha, n_client))
+
+        # 3. Convert proportions into actual sample counts via cumulative sum
+        cumulative_proportions = np.cumsum(proportions) * len(idx_c)
+        splits = cumulative_proportions.astype(int)[:-1]
+
+        # 4. Split the shuffled indices for class c based on the calculated splits
+        idx_c_split = np.split(idx_c, splits)
+
+        # 5. Distribute the splits to the respective clients
+        for i in range(n_client):
+            client_indices[i].extend(idx_c_split[i])
+
+    # 6. Extract the actual X and y data using the grouped indices
+    X_splits = []
+    y_splits = []
+
+    for i in range(n_client):
+        # Shuffle the indices within each client so they aren't ordered by class
+        idx = np.array(client_indices[i])
+        rng.shuffle(idx)
+        X_splits.append(X[idx])
+        y_splits.append(y[idx])
+
+    return X_splits, y_splits
+
+
 def random_semi_orthogonal(n, k):
     Z = np.random.standard_normal((n, k))
     Q, R = np.linalg.qr(Z)
