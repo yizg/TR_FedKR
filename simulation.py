@@ -91,7 +91,9 @@ class Simulation:
     def _compute_weights(self, counts, var_noise, var_cluster):
         if var_noise is not np.nan:
             var_noise_eff = self.X.shape[1] * var_noise / self.r
-            weights = counts / (1 + var_cluster / var_noise_eff)
+            var_custer_eff = var_cluster / counts
+            weights = counts / (1 + var_noise_eff / var_custer_eff)  # ESS
+            # weights = 1/(var_noise_eff + var_custer_eff)  # Inverse Variance
         else:
             weights = counts
         return weights.astype(np.float32)

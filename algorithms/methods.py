@@ -18,6 +18,7 @@ def kmeans(X, n_clusters, weights=None, return_extra=False):
             cluster_points = X[mask]
             center = centers[i]
             squared_distances = np.sum((cluster_points - center) ** 2, axis=1)
+            # Total variance across D dim
             variances[i] = np.mean(squared_distances)
         return centers, counts, variances
 
