@@ -75,15 +75,26 @@ class Simulation:
         # Noise parameter
         self.r = config.get("r", 1)
         self.snr_db = config.get("snr_db", 20)
+        self.snr_distribution = config.get("snr_distribution", "constant")
         self.eps = config.get("eps", 0)
         self.scheme = config.get("scheme", "rep")
         self.solver = config.get("solver", "ols")
         self.alpha = config.get("alpha", 0.2)
 
+        self.clients_snrs = self._initalize_snr_level()
         self.clients_centers = None
         self.clients_weights = None
         self.server_centers = None
         self.results = None
+
+    def _initalize_snr_level(self):
+        if self.snr_distribution == "constant":
+            return np.full(self.n_client, self.snr_db)
+        elif self.snr_distribution == "uniform":
+            return np.random.uniform(0.5 * self.snr_db, 1.5 * self.snr_db, self.n_client)
+        else:
+            raise ValueError(
+                f"Unknown SNR distribution: {self.snr_distribution}")
 
     def _partition_data(self, seed):
         if self.partition == "random":
@@ -115,9 +126,11 @@ class Simulation:
         else:
             raise ValueError(f"Unknown weighting scheme: {self.weighting}")
 
-    def _uplink_communication(self, vectors):
+    def _uplink_communication(self, vectors, client_idx):
+        client_snr = self.clients_snrs[client_idx]
+        # print(f"Client {client_idx} SNR: {client_snr:.2f} dB")
         vectors, var_noise_hat = denoising_process(
-            vectors, self.r, self.snr_db, self.eps, self.scheme, self.solver, self.alpha)
+            vectors, self.r, client_snr, self.eps, self.scheme, self.solver, self.alpha)
         return vectors, var_noise_hat
 
     def _server_aggregate(self):
@@ -147,7 +160,8 @@ class Simulation:
             for client in range(self.n_client):
                 centers, counts, var_cluster = kmeans(
                     self.X_part[client], n_clusters=self.k_client, return_extra=True)
-                centers, var_noise_hat = self._uplink_communication(centers)
+                centers, var_noise_hat = self._uplink_communication(
+                    centers, client)
                 weights = self._compute_weights(
                     counts, var_noise_hat, var_cluster)
                 clients_centers.append(centers)
