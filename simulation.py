@@ -70,6 +70,7 @@ class Simulation:
         self.k_server = config.get("k_server", 10)
         self.partition = config.get("partition", "random")
         self.aggregation = config.get("aggregation", "kmeans")
+        self.weighting = config.get("weighting", False)
         self.verbose = config.get("verbose", False)
         # Noise parameter
         self.r = config.get("r", 1)
@@ -91,14 +92,28 @@ class Simulation:
             return dirichlet_data_partition(self.X, self.y, self.n_client, self.partition, seed)
 
     def _compute_weights(self, counts, var_noise, var_cluster):
-        if var_noise is not np.nan:
+        if self.weighting == False:
+            return np.ones_like(counts).astype(np.float32)
+        elif self.weighting == "count":
+            return counts
+        elif self.weighting == "ess":
+            if var_noise is np.nan:
+                raise ValueError(
+                    "ESS weighting requires noise variance estimation.")
             var_noise_eff = self.X.shape[1] * var_noise / self.r
-            var_custer_eff = var_cluster / counts
-            weights = counts / (1 + var_noise_eff / var_custer_eff)  # ESS
+            # var_custer_eff = var_cluster / counts
+            # weights = counts / (1 + var_noise_eff / var_custer_eff)  # ESS
+            denom = var_cluster + counts * var_noise_eff
+            weights = np.zeros_like(denom)
+            valid = denom > 0
+            weights[valid] = counts[valid] * var_cluster[valid] / denom[valid]
+            # When s^2 = 0 and sigma^2 = 0: limit is n
             # weights = 1/(var_noise_eff + var_custer_eff)  # Inverse Variance
+            # print(weights, counts)
+            # weights = counts
+            return weights.astype(np.float32)
         else:
-            weights = counts
-        return weights.astype(np.float32)
+            raise ValueError(f"Unknown weighting scheme: {self.weighting}")
 
     def _uplink_communication(self, vectors):
         vectors, var_noise_hat = denoising_process(
@@ -107,7 +122,8 @@ class Simulation:
 
     def _server_aggregate(self):
         if self.aggregation == "kmeans":
-            return kmeans(self.clients_centers, n_clusters=self.k_server)
+            # return kmeans(self.clients_centers, n_clusters=self.k_server)
+            return kmeans(self.clients_centers, n_clusters=self.k_server, weights=self.clients_weights)
         if self.aggregation == "kmedian":
             return kmedian(self.clients_centers, n_clusters=self.k_server)
         if self.aggregation == "trimmed_kmeans":
@@ -116,8 +132,8 @@ class Simulation:
             filtered = mean_shift_filtering(
                 self.clients_centers, k=10, iterations=3)
             return kmeans(filtered, n_clusters=self.k_server)
-        if self.aggregation == "weighted_kmeans":
-            return kmeans(self.clients_centers, n_clusters=self.k_server, weights=self.clients_weights)
+        # if self.aggregation == "weighted_kmeans":
+        #     return kmeans(self.clients_centers, n_clusters=self.k_server, weights=self.clients_weights)
         raise ValueError(f"Unknown aggregation: {self.aggregation}")
 
     def run_trial(self, seed) -> dict:
@@ -130,8 +146,7 @@ class Simulation:
             clients_centers, clients_weights = [], []
             for client in range(self.n_client):
                 centers, counts, var_cluster = kmeans(
-                    self.X_part[client], n_clusters=self.k_client, return_extra=True
-                )
+                    self.X_part[client], n_clusters=self.k_client, return_extra=True)
                 centers, var_noise_hat = self._uplink_communication(centers)
                 weights = self._compute_weights(
                     counts, var_noise_hat, var_cluster)
