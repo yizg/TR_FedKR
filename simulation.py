@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from utils import *
-from utils.math_utils import ols, random_data_partition, dirichlet_data_partition, random_semi_orthogonal, least_trimmed_square, theil_sen
+from utils.math_utils import huber_regression, ols, random_data_partition, dirichlet_data_partition, random_semi_orthogonal, least_trimmed_square, theil_sen
 from utils.postprocess import evaluation_summary
 from algorithms.methods import kmeans, kmedian, trimmed_kmeans, mean_shift_filtering
 
@@ -48,6 +48,8 @@ def denoising_process(X, r, snr_db, eps=0, scheme="rep", solver='ols', alpha=0.2
         X_est, sigma2_est = ols(A_design, y_noisy)
     elif solver == 'lts':
         X_est, sigma2_est = least_trimmed_square(A_design, y_noisy, alpha)
+    elif solver == 'huber':
+        X_est, sigma2_est = huber_regression(A_design, y_noisy)
     elif solver == 'ts':
         X_est, sigma2_est = theil_sen(A_design, y_noisy, alpha)
 
@@ -85,8 +87,8 @@ class Simulation:
     def _partition_data(self, seed):
         if self.partition == "random":
             return random_data_partition(self.X, self.y, self.n_client, seed)
-        elif self.partition == "dirichlet":
-            return dirichlet_data_partition(self.X, self.y, self.n_client, 1, seed)
+        else:
+            return dirichlet_data_partition(self.X, self.y, self.n_client, self.partition, seed)
 
     def _compute_weights(self, counts, var_noise, var_cluster):
         if var_noise is not np.nan:

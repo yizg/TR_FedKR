@@ -1,6 +1,7 @@
 import numpy as np
 from robpy.regression.lts import FastLTSRegression
 from sklearn.linear_model import TheilSenRegressor
+from sklearn.linear_model import HuberRegressor
 
 
 def random_data_partition(X, y, n_client, random_state=0):
@@ -88,6 +89,23 @@ def ols(X, y):
     if X.shape[0]-X.shape[1] > 0:
         sigma2 = np.sum((X @ beta - y) ** 2)/(X.shape[0]-X.shape[1])
     return beta, sigma2  # [:-1] # Return coefficients and intercept
+
+
+def huber_regression(X, y, epsilon=1.35):
+    reg = HuberRegressor(
+        epsilon=epsilon,
+        alpha=0,
+        fit_intercept=False,
+        max_iter=1000
+    ).fit(X, y)
+
+    beta = reg.coef_
+
+    # Robust scale estimate from HuberRegressor
+    sigma = reg.scale_
+    sigma2 = sigma ** 2
+
+    return beta, sigma2
 
 
 def theil_sen(X, y, alpha):
