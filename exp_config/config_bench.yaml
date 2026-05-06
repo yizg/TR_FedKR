@@ -1,0 +1,63 @@
+output_prefix: bench
+
+defaults:
+  n_runs: 20
+  n_client: 10
+  k_client: 3
+  k_server: 3
+  partition: 1 #random, positive float
+  aggregation: kmeans #kmeans, kmedian, trimmed_kmeans, mean_shift_filtering
+  weighting : ess # False, count, ess, precision
+  verbose: False
+  r: 8
+  snr_db: 20
+  snr_distribution: uniform # constant, uniform
+  eps : 0
+  scheme : dense # rep, dense
+  solver : ols # ols, lts, huber
+  alpha : 0.25
+
+
+experiments:
+  - name: Scenario 1
+    snr_db: 20
+  - name: Naive Scenario 1
+    snr_db: 20
+    r: 1
+    weighting: count
+  - name: Scenario 2
+    snr_db: 15
+  - name: Naive Scenario 2
+    snr_db: 15
+    r: 1
+    weighting: count
+  - name: Scenario 3
+    snr_db: 10
+  - name: Naive Scenario 3
+    snr_db: 10
+    r: 1
+    weighting: count
+  - name: Scenario 4
+    n_runs: 10
+    snr_db: 15
+    eps: 0.1
+    solver: lts
+  - name: Naive Scenario 4
+    n_runs: 10
+    snr_db: 15
+    eps: 0.1
+    r: 1
+    weighting: count
+  - name: Scenario 5
+    n_runs: 10
+    snr_db: 15
+    eps: 0.2
+    solver: lts
+  - name: Naive Scenario 5
+    n_runs: 10
+    snr_db: 15
+    eps: 0.2
+    r: 1
+    weighting: count
+  - name: Centralized
+    n_client: 0

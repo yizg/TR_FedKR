@@ -1,0 +1,38 @@
+output_prefix: perf_r_awgn_S1
+
+defaults:
+  n_runs: 20
+  n_client: 10
+  k_client: 15
+  k_server: 15
+  partition: random #random, positive float
+  aggregation: kmeans #kmeans, kmedian, trimmed_kmeans, mean_shift_filtering
+  weighting : ess # False, count, ess, precision
+  verbose: False
+  r: 1
+  snr_db: 20
+  snr_distribution: uniform # constant, uniform
+  eps : 0
+  scheme : dense # rep, dense
+  solver : ols # ols, lts, huber
+  alpha : 0.2
+
+
+experiments:
+  - name: r=1
+    r: 1
+    weighting: count
+  - name: r=2
+    r: 2
+  - name: r=4
+    r: 4
+  - name: r=8
+    r: 8
+  - name: r=16
+    r: 16
+  - name: r=32
+    r: 32
+  - name: r=64
+    r: 64
+  - name: Centralized
+    n_client: 0

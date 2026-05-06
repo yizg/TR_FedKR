@@ -1,0 +1,47 @@
+output_prefix: dirichlet_ess_S4
+
+defaults:
+  n_runs: 20
+  n_client: 10
+  k_client: 15
+  k_server: 15
+  partition: random #random, positive float
+  aggregation: kmeans #kmeans, kmedian, trimmed_kmeans, mean_shift_filtering
+  weighting : False # False, count, ess, precision
+  verbose: False
+  r: 4
+  snr_db: 15
+  snr_distribution: uniform # constant, uniform
+  eps : 0
+  scheme : dense # rep, dense
+  solver : ols # ols, lts, huber
+  alpha : 0.2
+
+
+experiments:
+  - name: Uniform  a=inf
+    weighting : False
+  - name: Cluster Size  a=inf
+    weighting : count
+  - name: ESS a=inf
+    weighting : ess
+  - name: Uniform  a=0.5
+    weighting : False
+    partition: 0.5
+  - name: Cluster Size  a=0.5
+    weighting : count
+    partition: 0.5
+  - name: ESS a=0.5
+    weighting : ess
+    partition: 0.5
+  - name: Uniform  a=1
+    weighting : False
+    partition: 1
+  - name: Cluster Size  a=1
+    weighting : count
+    partition: 1
+  - name: ESS a=1
+    weighting : ess
+    partition: 1
+  - name: Centralized
+    n_client: 0

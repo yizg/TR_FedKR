@@ -1,16 +1,16 @@
-output_prefix: scaling
+output_prefix: perf_r_awgn_S1
 
 defaults:
   n_runs: 20
   n_client: 10
-  k_client: 26
-  k_server: 26
+  k_client: 15
+  k_server: 15
   partition: 1 #random, positive float
   aggregation: kmeans #kmeans, kmedian, trimmed_kmeans, mean_shift_filtering
   weighting : ess # False, count, ess, precision
   verbose: False
   r: 4
-  snr_db: 15
+  snr_db: 20
   snr_distribution: uniform # constant, uniform
   eps : 0
   scheme : dense # rep, dense
@@ -19,17 +19,19 @@ defaults:
 
 
 experiments:
-  - name: N = 8
-    n_client: 8
-  - name: N = 16
-    n_client: 16
-  - name: N = 32
-    n_client: 32
-  - name: N = 64
-    n_client: 64
-  - name: N = 128
-    n_client: 128
-  - name: N = 256
-    n_client: 256
-  - name: N = 512
-    n_client: 512
+  - name: k'=5
+    k_client: 5
+  - name: k'=10
+    k_client: 10
+  - name: k'=15
+    k_client: 15
+  - name: k'=20
+    k_client: 20
+  - name: k'=25
+    k_client: 25
+  - name: k'=30
+    k_client: 30
+  - name: k'=35
+    k_client: 35
+  - name: k'=40
+    k_client: 40

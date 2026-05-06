@@ -9,7 +9,7 @@ from utils.postprocess import plot_summary_bars
 
 
 class ExperimentOrchestrator:
-    def __init__(self, config_path: str, X: np.ndarray, y: np.ndarray):
+    def __init__(self, config_path: str, X: np.ndarray, y: np.ndarray, filename=None):
         with open(config_path) as f:
             raw = yaml.safe_load(f)
         self.defaults = raw.get("defaults", {})
@@ -20,6 +20,7 @@ class ExperimentOrchestrator:
         self.results_dir.mkdir(exist_ok=True)
         self.output_prefix = raw.get("output_prefix", "result")
         self.configs = []
+        self.filename = filename
 
     def _merge_config(self, exp: dict) -> dict:
         cfg = self.defaults.copy()
@@ -64,7 +65,7 @@ class ExperimentOrchestrator:
 
     def _save_and_summarize(self, df: pd.DataFrame):
         output = {}
-        filename = self._build_filename()
+        filename = self.filename or self._build_filename()
         output['raw_results'] = df
         output['config'] = self.configs
         # Compute mean/std per experiment
